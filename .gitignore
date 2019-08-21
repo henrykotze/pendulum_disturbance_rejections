@@ -1,3 +1,4 @@
-./train_data/*
-./val_data/*
-./datasets/*
+
+train_data/*
+val_data/*
+datasets/*

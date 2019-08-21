@@ -42,8 +42,6 @@ parser.add_argument('-randomInput', default=0, help='use a noise pendulum system
 parser.add_argument('-biases', default=0, help='add biases to the inputs')
 
 parser.add_argument('-bias_freq', default=10, help='max frequency of bias')
-parser.add_argument('-bias_offset', default=0.5, help='offset bias')
-parser.add_argument('-bias_mag', default=1, help='magnitude of bias')
 
 
 
@@ -65,20 +63,12 @@ dt = float(vars(args)['dt'])
 inputMag = float(vars(args)['inputMag'])
 maxInput = float(vars(args)['maxInput'])
 minInput = float(vars(args)['minInput'])
-noise = int(vars(args)['noise'])
-randomInput = int(vars(args)['randomInput'])
-biases = int(vars(args)['biases'])
 
 bias_freq = int(vars(args)['bias_freq'])
-bias_offset = float(vars(args)['bias_offset'])
-bias_mag = float(vars(args)['bias_mag'])
 
 
 
-if(noise == 1):
-    system_info = 'noisy ' + system
-else:
-    system_info = system
+system_info = system
 
 # Add a Readme file in directory to show selected variables that describe the
 # responses
@@ -106,11 +96,11 @@ def generateDisturbance(responseDuration,startInput,minInput,maxInput):
 
     while timestep < responseDuration:
 
-        zeroInputDur = int(responseDuration/2*(np.random.random()) ) # Duration of zero input
+        zeroInputDur = int(responseDuration*(np.random.random()) ) # Duration of zero input
 
 
-        freq =  np.random.randint(1,bias_freq)
-        inputDur = int(responseDuration/2*(np.random.random() ) ) + int(1/freq)*int(1/dt)
+        freq =  np.random.randint(0,bias_freq)
+        inputDur = int(responseDuration*(np.random.random() ) )
         freq_content = np.zeros([1,bias_freq])
         freq_content[0,freq] = freq
 
@@ -119,7 +109,7 @@ def generateDisturbance(responseDuration,startInput,minInput,maxInput):
 
         if(timestep + inputDur + zeroInputDur < responseDuration):
 
-            magInput = (bias_mag)*np.random.random() + bias_mag # Magnitude Size of Input
+            magInput = (1)*np.random.random() # Magnitude Size of Input
 
             # offset = (bias_offset--bias_offset)*np.random.random()-bias_offset
 
@@ -312,7 +302,7 @@ def generateCombinationInput(responseDuration,startInput,minInput,maxInput):
 if __name__ == '__main__':
     print('Creating the response of ', str(system_info))
     print('Writing responses to:', filename )
-    print(startSimNum, numberSims)
+    # print(startSimNum, numberSims)
 
     timeSteps= int(t/dt) # time in number of step
     numSim = trange(numberSims, desc='# of response', leave=True)
@@ -366,8 +356,7 @@ if __name__ == '__main__':
             biased_response.step()
 
 
-        if(noise == 1):
-            y = addNoise(y,500)
+            # y = addNoise(y,500)
 
         # Saves response in *.npz file
         # print(system)

@@ -3,3 +3,4 @@ train_data/*
 val_data/*
 datasets/*
 __pycache__/*
+training_results/*

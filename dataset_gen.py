@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(\
 
 parser.add_argument('-loc', default='./train_data/', help='location to stored responses, default: ./train_data')
 parser.add_argument('-Nt', default=5, help='number of previous output timesteps used, default: 5')
-parser.add_argument('-dataset_name', default='biased_dataset0', help='name of your dataset, default: dataset*')
+parser.add_argument('-dataset_name', default='dataset0', help='name of your dataset, default: dataset*')
 parser.add_argument('-dataset_loc', default='./datasets/', help='location to store dataset: ./datasets/')
 
 

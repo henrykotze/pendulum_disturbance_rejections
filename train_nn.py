@@ -13,7 +13,7 @@ import argparse
 import pickle
 from keras.callbacks import TensorBoard
 from datetime import datetime
-from wrap_tensorboard import TrainValTensorBoard
+# from wrap_tensorboard import TrainValTensorBoard
 import shelve
 import h5py
 
@@ -31,7 +31,7 @@ parser.add_argument('-mdl_name', default='nn_mdl', help='Name of model, default:
 parser.add_argument('-reg_w', default='0', help='Regularization of weight, default: 0')
 parser.add_argument('-lr', default='0', help='learning rate, default: 0')
 parser.add_argument('-valset', default='./datasets/', help='location of validation set, default: ./datasets')
-parser.add_argument('-name_dataset', default='dataset', help='Name Of Training Datasets: ')
+parser.add_argument('-name_dataset', default='dataset0', help='Name Of Training Datasets: ')
 parser.add_argument('-name_valset', default='validation_data', help='Name Of Validation Datasets: ')
 parser.add_argument('-log_loc', default='./training_results/', help='Location of logs and checkpoints')
 
@@ -53,9 +53,6 @@ validation_dataset = vars(args)['name_valset']
 # Directory containing all different models trained with all their logging
 # info
 log_dir = vars(args)['log_loc']
-
-
-
 
 
 # directory with the name of the training session
@@ -91,7 +88,6 @@ db.close()
 
 
 with shelve.open( str(dataset_path+'_readme') ) as db:
-    system = db['system']
     t = int(db['t'])
     numberSims = int(db['numSim'])
     filename = db['filename']
@@ -100,7 +96,7 @@ with shelve.open( str(dataset_path+'_readme') ) as db:
     print("{:<15} {:<10}".format('Label','Value'))
     for key,value in db.items():
         print("{:<15} {:<10}".format(key, value))
-        
+
 db.close()
 
 
@@ -197,6 +193,12 @@ class PrintDot(keras.callbacks.Callback):
         print('.', end='')
 
 
+class saveLogs(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs):
+        with shelve.open( str(model_logging_dir + '/'+'readme') ) as db:
+            for log_entry in logs:
+                db[log_entry] = logs[log_entry]
+        db.close()
 
 if __name__ == '__main__':
 
@@ -243,7 +245,7 @@ if __name__ == '__main__':
     # Learning of Model
     history = model.fit(features, labels, epochs=epochs, \
     # validation_data=(features_val,labels_val), verbose=1, callbacks=[tbCallBack,cp_callback])
-    validation_split=0.1, verbose=1, callbacks=[tbCallBack,cp_callback])
+    validation_split=0.1, verbose=1, callbacks=[saveLogs(),tbCallBack,cp_callback])
     # validation_data=(features_val,labels_val),verbose=1,callbacks=[TrainValTensorBoard(log_dir=logdir, write_graph=False)])
 
     # plot_history(history)

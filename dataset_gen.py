@@ -15,6 +15,7 @@ import os
 import pickle
 import shelve
 import h5py
+from tqdm import trange
 
 
 parser = argparse.ArgumentParser(\
@@ -24,7 +25,7 @@ parser = argparse.ArgumentParser(\
         )
 
 
-parser.add_argument('-loc', default='./biased_train_data/', help='location to stored responses, default: ./train_data')
+parser.add_argument('-loc', default='./train_data/', help='location to stored responses, default: ./train_data')
 parser.add_argument('-Nt', default=5, help='number of previous output timesteps used, default: 5')
 parser.add_argument('-dataset_name', default='biased_dataset0', help='name of your dataset, default: dataset*')
 parser.add_argument('-dataset_loc', default='./datasets/', help='location to store dataset: ./datasets/')
@@ -45,16 +46,13 @@ with shelve.open( str(dir+'/readme')) as db:
     dt = float(db['dt'])
     numberSims = int(db['numSim'])
     filename = db['filename']
-    bias_activated = int(db['biases'])
     maxInput = float(db['maxInput'])
     bias_freq = int(db['bias_freq'])
-    bias_offset = float(db['bias_offset'])
-    bias_mag = float(db['bias_mag'])
+
+    print("{:<15} {:<10}".format('Label','Value'))
+    for key,value in db.items():
+        print("{:<15} {:<10}".format(key, value))
 db.close()
-
-if(not bias_activated):
-    raise Exception('The data being loaded does not contain an bias')
-
 
 
 N_t = int(vars(args)['Nt'])
@@ -84,9 +82,14 @@ if __name__ == '__main__':
     max_bias_ydotdot = 0
     max_ydotdot = 0
 
-    for numFile in range(numberSims):
+    numSim = trange(numberSims, desc='# of response', leave=True)
+
+    for numFile in numSim:
+
+        numSim.set_description("# of response (%s)" %filename)
+        numSim.refresh() # to show immediately the update
+
         with np.load(str(dir+'/'+filename)) as data:
-            print('Loading Data from: ', filename)
 
             biased_response_y = data['biased_y'] # inputs from given file
             response_y = data['y_'] # inputs from given file
@@ -108,38 +111,32 @@ if __name__ == '__main__':
                  max_ydotdot = np.amax(response_y_dotdot)
 
             for step in range( N_t, timeSteps- N_t ):
-                # labels[step+timeSteps*numFile,0] = bias_labels[step][0]/bias_mag
-                # labels[step+timeSteps*numFile,1] = bias_labels[step][1]/bias_freq
-                # labels[step+timeSteps*numFile,2] = bias_labels[step][2]/bias_offset
                 labels[step+timeSteps*numFile,:] = bias_labels[step]
-                # print(bias_labels[step])
 
                 for n in range(0,N_t):
                     features[step+timeSteps*numFile,n] = input[step-n]/maxInput
-                for n in range(0,N_t):
                     features[step+timeSteps*numFile,N_t+n] = np.sin(response_y[step-n])
-                for n in range(0,N_t):
                     features[step+timeSteps*numFile,2*N_t+n] = np.sin(biased_response_y[step-n])
-                for n in range(0,N_t):
                     features[step+timeSteps*numFile,3*N_t+n] = response_y_dotdot[step-n]
-                for n in range(0,N_t):
                     features[step+timeSteps*numFile,4*N_t+n] = biased_response_y_dotdot[step-n]
+
             db.close()
 
             # fetch next name of *.npz file to be loaded
             filename = filename.replace(str(numFile),str(numFile+1))
+            numSim.update()
 
 
     features[:,3*N_t:3*N_t+N_t] = features[:,3*N_t:3*N_t+N_t]/max_ydotdot
     features[:,4*N_t:4*N_t+N_t] = features[:,4*N_t:4*N_t+N_t]/max_bias_ydotdot
 
-    print()
-    print('----------------------------------------------------------------')
-    print('Information from all Responses')
-    print('----------------------------------------------------------------')
-    print('max_bias_ydotdot: ', max_bias_ydotdot)
-    print('max_ydotdot: ', max_ydotdot)
-    print('----------------------------------------------------------------')
+    # print()
+    # print('----------------------------------------------------------------')
+    # print('Information from all Responses')
+    # print('----------------------------------------------------------------')
+    # print('max_bias_ydotdot: ', max_bias_ydotdot)
+    # print('max_ydotdot: ', max_ydotdot)
+    # print('----------------------------------------------------------------')
 
 
 
@@ -152,14 +149,3 @@ if __name__ == '__main__':
     h5f.create_dataset('features', data=features)
     h5f.create_dataset('labels', data=labels)
     h5f.close()
-
-    # with open(dataset_loc + '/'+nameOfDataset,'wb+') as filen:
-    #
-    #     print('\n--------------------------------------------------------------')
-    #     print('Saving features and labels to:', nameOfDataset)
-    #     print('\n--------------------------------------------------------------')
-    #
-    #     pickle.dump([features,labels],filen)
-
-
-    # filen.close()

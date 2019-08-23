@@ -73,9 +73,10 @@ plt.grid()
 
 plt.figure(3)
 plt.plot(biased_labels,'-', mew=1, ms=8,mec='w')
+plt.legend(['0','1','2','3','4','5','6','7','8','9'])
 plt.grid()
 
-
+print(biased_labels[0,:].size)
 
 plt.show()
 

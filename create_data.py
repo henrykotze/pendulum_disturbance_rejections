@@ -43,6 +43,9 @@ parser.add_argument('-biases', default=0, help='add biases to the inputs')
 
 parser.add_argument('-bias_freq', default=10, help='max frequency of bias')
 
+parser.add_argument('-min_freq', default=10, help='min frequency of bias')
+parser.add_argument('-max_freq', default=10, help='max frequency of bias')
+
 
 
 
@@ -66,6 +69,8 @@ minInput = float(vars(args)['minInput'])
 
 bias_freq = int(vars(args)['bias_freq'])
 
+min_freq = int(vars(args)['min_freq'])
+max_freq = int(vars(args)['max_freq'])
 
 
 system_info = system
@@ -90,43 +95,26 @@ def determine_system(system,wn,zeta,initial_condition):
 def generateDisturbance(responseDuration,startInput,minInput,maxInput):
 
     input = np.zeros( (responseDuration,1) )
+    labels = np.zeros([responseDuration,max_freq-min_freq+1])
+    # zeroInputDur = int(responseDuration/10*(np.random.random())    ) # Duration of zero input
+    startInput = int(np.random.randint(0,responseDuration))
     timestep = startInput
 
-    labels = np.zeros([responseDuration,bias_freq])
 
-    while timestep < responseDuration:
+    freq =  np.random.randint(min_freq,max_freq+1)
+    inputDur = int(responseDuration-startInput)
+    freq_content = np.zeros([1,max_freq-min_freq+1])
+    # print(freq_content)
+    # print(freq,freq-min_freq)
+    freq_content[0,freq-min_freq] = 1
 
-        zeroInputDur = int(responseDuration*(np.random.random()) ) # Duration of zero input
+    magInput = (2)*np.random.random() # Magnitude Size of Input
 
+    labels[0:startInput][:] = np.zeros([1,max_freq-min_freq+1])
 
-        freq =  np.random.randint(0,bias_freq)
-        inputDur = int(responseDuration*(np.random.random() ) )
-        freq_content = np.zeros([1,bias_freq])
-        freq_content[0,freq] = freq
-
-        # zero_input = np.zeros([1,bias_freq])
-        # zero_input[0,0] = 1
-
-        if(timestep + inputDur + zeroInputDur < responseDuration):
-
-            magInput = (1)*np.random.random() # Magnitude Size of Input
-
-            # offset = (bias_offset--bias_offset)*np.random.random()-bias_offset
-
-            # freq =  np.random.randint(0,bias_freq)
-            # freq_content = np.zeros([1,bias_freq])
-            # freq_content[0,freq] = 1
-
-            t = np.arange(timestep,timestep+inputDur)
-
-            input[timestep:timestep+inputDur] = np.transpose(np.array([magInput*np.sin(2*np.pi*freq*t/inputDur)]))
-            labels[timestep:timestep+inputDur][:] = freq_content
-            timestep += inputDur
-            input[timestep:timestep+zeroInputDur] = 0
-            labels[timestep:timestep+zeroInputDur][:] = np.zeros([1,bias_freq])
-            timestep += zeroInputDur
-        else:
-            break
+    t = np.arange(timestep,timestep+inputDur)
+    input[timestep:timestep+inputDur] = np.transpose(np.array([magInput*np.sin(2*np.pi*freq*t/inputDur)]))
+    labels[timestep:timestep+inputDur][:] = freq_content
 
     return input,labels
 

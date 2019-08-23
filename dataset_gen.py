@@ -47,7 +47,8 @@ with shelve.open( str(dir+'/readme')) as db:
     numberSims = int(db['numSim'])
     filename = db['filename']
     maxInput = float(db['maxInput'])
-    bias_freq = int(db['bias_freq'])
+    min_freq = int(db['min_freq'])
+    max_freq = int(db['max_freq'])
 
     print("{:<15} {:<10}".format('Label','Value'))
     for key,value in db.items():
@@ -77,7 +78,7 @@ if __name__ == '__main__':
 
     # Pre-creating correct sizes of arrays
     features = np.zeros( (timeSteps*numberSims,5*N_t) )   # +1 is for the input
-    labels = np.zeros( (timeSteps*numberSims,bias_freq) )
+    labels = np.zeros( (timeSteps*numberSims,max_freq-min_freq+1) )
     max_input = 0
     max_bias_ydotdot = 0
     max_ydotdot = 0

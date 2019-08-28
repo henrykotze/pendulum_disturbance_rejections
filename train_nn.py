@@ -91,7 +91,8 @@ with shelve.open( str(dataset_path+'_readme') ) as db:
     t = int(db['t'])
     numberSims = int(db['numSim'])
     filename = db['filename']
-    bias_freq = int(db['bias_freq'])
+    max_freq = int(db['max_freq'])
+    min_freq = int(db['min_freq'])
 
     print("{:<15} {:<10}".format('Label','Value'))
     for key,value in db.items():
@@ -119,7 +120,7 @@ def build_model(dataset):
     # layers.Dropout(0.2),\
     # layers.Dropout(0.4),\
 
-    layers.Dense(bias_freq,kernel_regularizer=keras.regularizers.l2(weight_reg)),
+    layers.Dense(max_freq-min_freq+1,kernel_regularizer=keras.regularizers.l2(weight_reg)),
     layers.Softmax()])
     # ])
 
